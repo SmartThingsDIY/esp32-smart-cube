@@ -1,17 +1,99 @@
 #include <Arduino.h>
 #include "secrets.h"
+#include <PubSubClient.h>
+#include "WiFi.h"
 #include <Adafruit_MPU6050.h>
 #include <Adafruit_Sensor.h>
 #include <Wire.h>
 
 #define DEBUG true // switch to "false" for production
+#define NB_TRYWIFI 20 // WiFi connection retries
 Adafruit_MPU6050 mpu;
+
+WiFiClient espClient;
+PubSubClient client(espClient);
 
 // **************
 void loop();
 void setup();
+void connectToWiFi();
+void connectToHass();
+void publishAlarmToHass(String msg);
 // **************
 
+/**
+ * Establishes WiFi connection
+ * @return
+ */
+void connectToWiFi()
+{
+    int _try = 0;
+
+    WiFi.mode(WIFI_STA);
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+
+    if (DEBUG == true) {
+        Serial.println("Connecting to Wi-Fi");
+    }
+
+    while (WiFi.status() != WL_CONNECTED)
+    {
+        delay(500);
+        Serial.print(".");
+        _try++;
+        if ( _try >= NB_TRYWIFI ) {
+            if (DEBUG == true) {
+                Serial.println("Impossible to connect WiFi, going to deep sleep");
+            }
+        }
+    }
+}
+
+/**
+ * Establishes connection to Home Assistant MQTT Broker
+ * @return
+ */
+void connectToHass()
+{
+    client.setServer(MQTT_SERVER, 1883);
+
+    // Loop until we're reconnected
+    while (!client.connected()) {
+        if (DEBUG == true) {
+            Serial.print("Attempting MQTT connection...");
+        }
+        // Attempt to connect
+        // If you do not want to use a username and password, change next line to
+        // if (client.connect("ESP8266Client")) {
+        if (client.connect("ESP8266Client", MQTT_USER, MQTT_PASSWORD)) {
+            if (DEBUG == true) {
+                Serial.println("connected");
+            }
+        } else {
+            if (DEBUG == true) {
+                Serial.print("failed, rc=");
+                Serial.print(client.state());
+                Serial.println(" try again in 5 seconds");
+            }
+            // Wait 5 seconds before retrying
+            delay(5000);
+        }
+    }
+}
+
+/**
+ * Publishes notification to MQTT topic
+ * @return
+ */
+void publishAlarmToHass(String msg)
+{
+    // publish the reading to Hass through MQTT
+    client.publish(MQTT_PUBLISH_TOPIC, msg.c_str(), true);
+    client.loop();
+    if (DEBUG == true) {
+        Serial.println("Alarm sent to Hass!");
+    }
+}
 
 void setup(void)
 {
@@ -21,7 +103,8 @@ void setup(void)
         Serial.print("Waking up ");
     }
     Serial.begin(115200);
-    while (!Serial) {
+    while (!Serial)
+    {
         delay(10); // will pause Zero, Leonardo, etc until serial console opens
     }
 
@@ -106,6 +189,13 @@ void setup(void)
 
 void loop()
 {
+    int awake = 0;
+
+    if (awake == 1) {
+        connectToWiFi();
+        connectToHass();
+        publishAlarmToHass("do this");
+    }
 
     /* Get new sensor events with the readings */
     sensors_event_t a, g, temp;
