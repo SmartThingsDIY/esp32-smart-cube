@@ -4,3 +4,5 @@
 .vscode/launch.json
 .vscode/ipch
 src/secrets.h
+src/main_copy.cpp
+src/main_copy.off
