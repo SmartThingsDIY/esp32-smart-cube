@@ -2,8 +2,8 @@
 
 #define SECRET
 
-const char ssid[] = "XXXXXXXX";
-const char pass[] = "XXXXXXXX";
+const char WIFI_SSID[] = "XXXXXXXX";
+const char WIFI_PASSWORD[] = "XXXXXXXX";
 
 // The MQTT topics that this device should publish/subscribe
 #define MQTT_PUBLISH_TOPIC  "XXXXXXXX"
