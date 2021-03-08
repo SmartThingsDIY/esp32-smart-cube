@@ -6,8 +6,9 @@
 #include <Adafruit_Sensor.h>
 #include <Wire.h>
 
-#define DEBUG true // switch to "false" for production
-#define NB_TRYWIFI 20 // WiFi connection retries
+#define DEBUG true       // switch to "false" for production
+#define NB_TRYWIFI 20    // WiFi connection retries
+#define durationSleep 30 // seconds
 Adafruit_MPU6050 mpu;
 
 WiFiClient espClient;
@@ -16,8 +17,12 @@ PubSubClient client(espClient);
 // **************
 void loop();
 void setup();
+void doAction();
+void goToSleep();
 void connectToWiFi();
 void connectToHass();
+void initGyroComponent();
+void printWakeupReason();
 void publishAlarmToHass(String msg);
 // **************
 
@@ -32,7 +37,8 @@ void connectToWiFi()
     WiFi.mode(WIFI_STA);
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
-    if (DEBUG == true) {
+    if (DEBUG == true)
+    {
         Serial.println("Connecting to Wi-Fi");
     }
 
@@ -41,11 +47,19 @@ void connectToWiFi()
         delay(500);
         Serial.print(".");
         _try++;
-        if ( _try >= NB_TRYWIFI ) {
-            if (DEBUG == true) {
+        if (_try >= NB_TRYWIFI)
+        {
+            if (DEBUG == true)
+            {
                 Serial.println("Impossible to connect WiFi, going to deep sleep");
             }
+
+            ESP.deepSleep(durationSleep * 1000000);
         }
+    }
+    if (DEBUG == true)
+    {
+        Serial.println("Connected to Wi-Fi");
     }
 }
 
@@ -58,19 +72,26 @@ void connectToHass()
     client.setServer(MQTT_SERVER, 1883);
 
     // Loop until we're reconnected
-    while (!client.connected()) {
-        if (DEBUG == true) {
+    while (!client.connected())
+    {
+        if (DEBUG == true)
+        {
             Serial.print("Attempting MQTT connection...");
         }
         // Attempt to connect
         // If you do not want to use a username and password, change next line to
         // if (client.connect("ESP8266Client")) {
-        if (client.connect("ESP8266Client", MQTT_USER, MQTT_PASSWORD)) {
-            if (DEBUG == true) {
+        if (client.connect("ESP8266Client", MQTT_USER, MQTT_PASSWORD))
+        {
+            if (DEBUG == true)
+            {
                 Serial.println("connected");
             }
-        } else {
-            if (DEBUG == true) {
+        }
+        else
+        {
+            if (DEBUG == true)
+            {
                 Serial.print("failed, rc=");
                 Serial.print(client.state());
                 Serial.println(" try again in 5 seconds");
@@ -90,26 +111,118 @@ void publishAlarmToHass(String msg)
     // publish the reading to Hass through MQTT
     client.publish(MQTT_PUBLISH_TOPIC, msg.c_str(), true);
     client.loop();
-    if (DEBUG == true) {
+    if (DEBUG == true)
+    {
         Serial.println("Alarm sent to Hass!");
     }
 }
 
 void setup(void)
 {
+    Serial.begin(115200);
+
     // only print debug messages to serial if we're in debug mode
     if (DEBUG == true)
     {
-        Serial.print("Waking up ");
+        Serial.println("Waking up ");
+        printWakeupReason(); // Print the wakeup reason for ESP32
     }
-    Serial.begin(115200);
+
     while (!Serial)
     {
         delay(10); // will pause Zero, Leonardo, etc until serial console opens
     }
 
-    Serial.println("Adafruit MPU6050 test!");
+    initGyroComponent();
 
+    // connectToWiFi();
+    // connectToHass();
+    // publishAlarmToHass("do this");
+
+    /* Get new sensor events with the readings */
+    sensors_event_t a, g, temp;
+    mpu.getEvent(&a, &g, &temp);
+
+    if (DEBUG == true)
+    {
+        Serial.println("");
+        Serial.print("Acceleration X: ");
+        Serial.print(a.acceleration.x);
+        Serial.print(", Y: ");
+        Serial.print(a.acceleration.y);
+        Serial.print(", Z: ");
+        Serial.print(a.acceleration.z);
+        Serial.println(" m/s^2");
+
+        Serial.print("Rotation X: ");
+        Serial.print(g.gyro.x);
+        Serial.print(", Y: ");
+        Serial.print(g.gyro.y);
+        Serial.print(", Z: ");
+        Serial.print(g.gyro.z);
+        Serial.println(" rad/s");
+
+        Serial.println("");
+    }
+    delay(1000);
+
+    // doAction();
+    delay(5000); // stay awake for 5 seconds
+    goToSleep();
+}
+
+void doAction()
+{
+    // ...
+}
+
+void goToSleep()
+{
+    if (DEBUG == true)
+    {
+        Serial.println("Going to sleep");
+    }
+
+    // Configure GPIO33 as ext0 wake up source for HIGH logic level
+    esp_sleep_enable_ext0_wakeup(GPIO_NUM_33, 1);
+
+    // Go to sleep now
+    esp_deep_sleep_start();
+}
+/**
+ * Function that prints the reason by which ESP32 has been awaken from sleep
+ *
+**/
+void printWakeupReason()
+{
+    esp_sleep_wakeup_cause_t wakeupReason;
+    wakeupReason = esp_sleep_get_wakeup_cause();
+
+    switch (wakeupReason)
+    {
+    case 1:
+        Serial.println("Wakeup caused by external signal using RTC_IO");
+        break;
+    case 2:
+        Serial.println("Wakeup caused by external signal using RTC_CNTL");
+        break;
+    case 3:
+        Serial.println("Wakeup caused by timer");
+        break;
+    case 4:
+        Serial.println("Wakeup caused by touchpad");
+        break;
+    case 5:
+        Serial.println("Wakeup caused by ULP program");
+        break;
+    default:
+        Serial.println("Wakeup was not caused by deep sleep");
+        break;
+    }
+}
+
+void initGyroComponent()
+{
     // Try to initialize!
     if (!mpu.begin())
     {
@@ -119,7 +232,10 @@ void setup(void)
             delay(10);
         }
     }
+
+    Serial.println("");
     Serial.println("MPU6050 Found!");
+    Serial.println("");
 
     mpu.setAccelerometerRange(MPU6050_RANGE_8_G);
     Serial.print("Accelerometer range set to: ");
@@ -138,6 +254,7 @@ void setup(void)
         Serial.println("+-16G");
         break;
     }
+
     mpu.setGyroRange(MPU6050_RANGE_500_DEG);
     Serial.print("Gyro range set to: ");
     switch (mpu.getGyroRange())
@@ -183,41 +300,7 @@ void setup(void)
         break;
     }
 
-    Serial.println("");
     delay(100);
 }
 
-void loop()
-{
-    int awake = 0;
-
-    if (awake == 1) {
-        connectToWiFi();
-        connectToHass();
-        publishAlarmToHass("do this");
-    }
-
-    /* Get new sensor events with the readings */
-    sensors_event_t a, g, temp;
-    mpu.getEvent(&a, &g, &temp);
-
-    /* Print out the values */
-    Serial.print("Acceleration X: ");
-    Serial.print(a.acceleration.x);
-    Serial.print(", Y: ");
-    Serial.print(a.acceleration.y);
-    Serial.print(", Z: ");
-    Serial.print(a.acceleration.z);
-    Serial.println(" m/s^2");
-
-    Serial.print("Rotation X: ");
-    Serial.print(g.gyro.x);
-    Serial.print(", Y: ");
-    Serial.print(g.gyro.y);
-    Serial.print(", Z: ");
-    Serial.print(g.gyro.z);
-    Serial.println(" rad/s");
-
-    Serial.println("");
-    delay(1000);
-}
+void loop() {}
