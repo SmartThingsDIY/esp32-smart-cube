@@ -23,7 +23,7 @@ void connectToWiFi();
 void connectToHass();
 void initGyroComponent();
 void printWakeupReason();
-void publishAlarmToHass(String msg);
+// void publishAlarmToHass(String msg);
 // **************
 
 /**
@@ -80,8 +80,8 @@ void connectToHass()
         }
         // Attempt to connect
         // If you do not want to use a username and password, change next line to
-        // if (client.connect("ESP8266Client")) {
-        if (client.connect("ESP8266Client", MQTT_USER, MQTT_PASSWORD))
+        // if (client.connect("ESP32Client")) {
+        if (client.connect("ESP32Client", MQTT_USER, MQTT_PASSWORD))
         {
             if (DEBUG == true)
             {
@@ -135,8 +135,8 @@ void setup(void)
 
     initGyroComponent();
 
-    // connectToWiFi();
-    // connectToHass();
+    connectToWiFi();
+    connectToHass();
     // publishAlarmToHass("do this");
 
     /* Get new sensor events with the readings */
