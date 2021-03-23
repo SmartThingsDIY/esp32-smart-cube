@@ -9,6 +9,8 @@
 #define DEBUG true       // switch to "false" for production
 #define NB_TRYWIFI 20    // WiFi connection retries
 #define durationSleep 30 // seconds
+
+float GyroX, GyroY, GyroZ;
 Adafruit_MPU6050 mpu;
 
 WiFiClient espClient;
@@ -135,8 +137,8 @@ void setup(void)
 
     initGyroComponent();
 
-    connectToWiFi();
-    connectToHass();
+    // connectToWiFi();
+    // connectToHass();
     // publishAlarmToHass("do this");
 
     /* Get new sensor events with the readings */
@@ -146,25 +148,41 @@ void setup(void)
     if (DEBUG == true)
     {
         Serial.println("");
-        Serial.print("Acceleration X: ");
-        Serial.print(a.acceleration.x);
-        Serial.print(", Y: ");
-        Serial.print(a.acceleration.y);
-        Serial.print(", Z: ");
-        Serial.print(a.acceleration.z);
-        Serial.println(" m/s^2");
 
+        GyroX = g.gyro.x;
         Serial.print("Rotation X: ");
-        Serial.print(g.gyro.x);
+        Serial.print(GyroX);
+
+        GyroY = g.gyro.y;
         Serial.print(", Y: ");
-        Serial.print(g.gyro.y);
+        Serial.print(GyroY);
+
+        GyroZ = g.gyro.z;
         Serial.print(", Z: ");
         Serial.print(g.gyro.z);
+
         Serial.println(" rad/s");
 
         Serial.println("");
+
+        delay(2000); // stay awake for 5 seconds
+
+        mpu.getEvent(&a, &g, &temp);
+        GyroX = g.gyro.x;
+        Serial.print("Rotation X: ");
+        Serial.print(GyroX);
+
+        GyroY = g.gyro.y;
+        Serial.print(", Y: ");
+        Serial.print(GyroY);
+
+        GyroZ = g.gyro.z;
+        Serial.print(", Z: ");
+        Serial.print(g.gyro.z);
+
+        Serial.println(" rad/s");
+        Serial.println("");
     }
-    delay(1000);
 
     // doAction();
     delay(5000); // stay awake for 5 seconds
@@ -236,24 +254,6 @@ void initGyroComponent()
     Serial.println("");
     Serial.println("MPU6050 Found!");
     Serial.println("");
-
-    mpu.setAccelerometerRange(MPU6050_RANGE_8_G);
-    Serial.print("Accelerometer range set to: ");
-    switch (mpu.getAccelerometerRange())
-    {
-    case MPU6050_RANGE_2_G:
-        Serial.println("+-2G");
-        break;
-    case MPU6050_RANGE_4_G:
-        Serial.println("+-4G");
-        break;
-    case MPU6050_RANGE_8_G:
-        Serial.println("+-8G");
-        break;
-    case MPU6050_RANGE_16_G:
-        Serial.println("+-16G");
-        break;
-    }
 
     mpu.setGyroRange(MPU6050_RANGE_500_DEG);
     Serial.print("Gyro range set to: ");

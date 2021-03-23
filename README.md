@@ -1,4 +1,4 @@
-# DIY Smart Desktop Cube
+# DIY ESP32 Smart Desktop Cube
 
 About
 =====
