@@ -41,8 +41,9 @@ The MPU-6050 is a serious little piece of motion processing tech! By combining b
 Hardware Overview: SW-420 Vibration Sensor
 ----------------------
 
-<img align="right" src="https://github.com/MecaHumArduino/esp32-smart-cube/blob/main/doc/img/SW-420-sensor.jpeg?raw=true" style="max-width:100%;" height="300">
+<img align="center" src="https://github.com/MecaHumArduino/esp32-smart-cube/blob/main/doc/img/SW-420-sensor.jpeg?raw=true" height="300">
 
+This Vibration Sensor Module consists of an SW-420 Vibration Sensor, resistors, capacitor, potentiometer, comparator LM393 IC, Power, and status LED in an integrated circuit. It is useful for a variety of shocks triggering, theft alarm, smart car, an earthquake alarm, motorcycle alarm, etc.
 
 
 Schematic Diagram
