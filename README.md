@@ -22,6 +22,7 @@ This DIY smart cube sits on your desk and provides ability to automate everythin
 *   [VSCode](https://code.visualstudio.com/)
 *   [Fritzing](https://fritzing.org/)
 *   [PlatformIO](https://platformio.org/)
+*   [Home Assistant](https://www.home-assistant.io//)
 
 📦 Libraries
 =====
@@ -60,16 +61,16 @@ No one likes wires hanging around, and so I went ahead looking for a 3D case I c
 Schematic Diagram
 -----------------
 
-Wire the MPU6050 and the SW-420 to the [ESP32](https://amzn.to/3jmCpqx) development board as shown in the following schematic diagram.
+Wire the **MPU6050** and the **SW-420** to the [**ESP32**](https://amzn.to/3jmCpqx) development board as shown in the following schematic diagram.
 
 <img align="center" src="https://github.com/MecaHumArduino/esp32-smart-cube/blob/main/doc/img/wiring-diagram.png?raw=true" style="max-width:100%;" height="600">
 
 THE CODE
 --------
 
-Rename the file [secret.h.public](https://github.com/isbkch/esp32-aws-weather-station/blob/master/secrets.h.public) to **secret.h** and edit it with your information.
+Rename the file [secret.h.public](https://github.com/MecaHumArduino/esp32-smart-cube/blob/main/src/secrets_copy.h) to **secret.h** and edit it with your information: WiFi credentials, Home Assistant details...
 
-The code within `main.cpp` file is well documented, but I'll try to explain the concepts and ideas behind the code in this section. But first of all, copy the file `secrets_copy.h` to `secrets.h` and edit its content with your details: WiFi credentials, Home Assistant details...
+The code within `main.cpp` file is well documented, but I'll try to explain the concepts and ideas behind the code in this section.
 
 The sketch begins with the creation of a few objects we'll need along the way: `WiFiClient` that we use to connect to Wifi and `PubSubClient` that we use to send data through MQTT
 
@@ -81,10 +82,12 @@ PubSubClient client(espClient);
 Then we declare a few variables like the pins used to send the wave and measure the time it take to bounce back, as long as the number of tries we aim to do while connecting to WiFi because we want to avoid draining the battery trying to connect to WiFi indefinitely.
 
 ```cpp
-#define NB_TRYWIFI 20 // WiFi connection retries
+#define DEBUG true
+#define NB_TRYWIFI 20
+#define durationSleep 30
 
-#define sensorEchoPin D5
-#define sensorTrigPin D6
+float GyroX, GyroY, GyroZ;
+Adafruit_MPU6050 mpu;
 ```
 
 The `setup()` function make sure the WiFi is disconnected when the board first boots up, and that's because WiFi consumes a lot of energy, so we want to make sure it's only activated when required:
@@ -121,5 +124,5 @@ long readSensor()
 Make sure you have installed an MQTT broker in your HomeAssistant setup beforehand. You can start here: https://www.home-assistant.io/docs/mqtt/broker#run-your-own
 
 Finally
-======
+--------
 All contribution to this project is appreciated
