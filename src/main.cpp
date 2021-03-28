@@ -141,42 +141,24 @@ void setup(void)
     // connectToHass();
     // publishAlarmToHass("do this");
 
+    /* wait for the cube to be put down */
+    delay(2000);
     /* Get new sensor events with the readings */
     sensors_event_t a, g, temp;
     mpu.getEvent(&a, &g, &temp);
 
+    GyroX = g.gyro.x;
+    GyroY = g.gyro.y;
+    GyroZ = g.gyro.z;
     if (DEBUG == true)
     {
         Serial.println("");
-
-        GyroX = g.gyro.x;
         Serial.print("Rotation X: ");
         Serial.print(GyroX);
 
-        GyroY = g.gyro.y;
         Serial.print(", Y: ");
         Serial.print(GyroY);
 
-        GyroZ = g.gyro.z;
-        Serial.print(", Z: ");
-        Serial.print(g.gyro.z);
-
-        Serial.println(" rad/s");
-
-        Serial.println("");
-
-        delay(2000); // stay awake for 5 seconds
-
-        mpu.getEvent(&a, &g, &temp);
-        GyroX = g.gyro.x;
-        Serial.print("Rotation X: ");
-        Serial.print(GyroX);
-
-        GyroY = g.gyro.y;
-        Serial.print(", Y: ");
-        Serial.print(GyroY);
-
-        GyroZ = g.gyro.z;
         Serial.print(", Z: ");
         Serial.print(g.gyro.z);
 
