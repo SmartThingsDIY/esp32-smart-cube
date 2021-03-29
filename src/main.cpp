@@ -19,7 +19,7 @@ PubSubClient client(espClient);
 // **************
 void loop();
 void setup();
-void doAction();
+void doAction(float x, float y, float z);
 void goToSleep();
 void connectToWiFi();
 void connectToHass();
@@ -137,10 +137,6 @@ void setup(void)
 
     initGyroComponent();
 
-    // connectToWiFi();
-    // connectToHass();
-    // publishAlarmToHass("do this");
-
     /* wait for the cube to be put down */
     delay(2000);
     /* Get new sensor events with the readings */
@@ -150,6 +146,7 @@ void setup(void)
     GyroX = g.gyro.x;
     GyroY = g.gyro.y;
     GyroZ = g.gyro.z;
+
     if (DEBUG == true)
     {
         Serial.println("");
@@ -160,20 +157,36 @@ void setup(void)
         Serial.print(GyroY);
 
         Serial.print(", Z: ");
-        Serial.print(g.gyro.z);
+        Serial.print(GyroZ);
 
         Serial.println(" rad/s");
         Serial.println("");
     }
 
-    // doAction();
+    doAction(GyroX, GyroY, GyroZ);
+
     delay(5000); // stay awake for 5 seconds
     goToSleep();
 }
 
-void doAction()
+void doAction(float x, float y, float z)
 {
-    // ...
+    if (DEBUG == true)
+    {
+        Serial.print("x: ");
+        Serial.println(x);
+        Serial.print("y: ");
+        Serial.println(y);
+    }
+
+    connectToWiFi();
+    connectToHass();
+
+    if (x == 0.00 && y == 0.00) {
+        publishAlarmToHass("Upside down");
+    } else if (x == -0.01 && y == -0.01) {
+        publishAlarmToHass("Face 2");
+    }
 }
 
 void goToSleep()
