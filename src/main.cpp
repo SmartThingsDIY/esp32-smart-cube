@@ -4,6 +4,8 @@
 #include "WiFi.h"
 #include <Adafruit_MPU6050.h>
 #include <Adafruit_Sensor.h>
+#include <iostream>
+#include <string>
 #include <Wire.h>
 
 #define DEBUG true       // switch to "false" for production
@@ -19,13 +21,13 @@ PubSubClient client(espClient);
 // **************
 void loop();
 void setup();
-void doAction(float x, float y, float z);
+void doAction(String x, String y, String z);
 void goToSleep();
 void connectToWiFi();
 void connectToHass();
 void initGyroComponent();
 void printWakeupReason();
-// void publishAlarmToHass(String msg);
+void publishAlarmToHass(String msg);
 // **************
 
 /**
@@ -110,12 +112,19 @@ void connectToHass()
  */
 void publishAlarmToHass(String msg)
 {
+    if (DEBUG == true)
+    {
+        Serial.println("Publishing to Hass!");
+    }
     // publish the reading to Hass through MQTT
     client.publish(MQTT_PUBLISH_TOPIC, msg.c_str(), true);
     client.loop();
+
     if (DEBUG == true)
     {
-        Serial.println("Alarm sent to Hass!");
+        Serial.print("Alarm ");
+        Serial.print(msg);
+        Serial.println(" sent to Hass!");
     }
 }
 
@@ -159,33 +168,29 @@ void setup(void)
         Serial.print(", Z: ");
         Serial.print(GyroZ);
 
-        Serial.println(" rad/s");
         Serial.println("");
     }
 
-    doAction(GyroX, GyroY, GyroZ);
+    doAction(String(GyroX), String(GyroY), String(GyroZ));
 
     delay(5000); // stay awake for 5 seconds
     goToSleep();
 }
 
-void doAction(float x, float y, float z)
+void doAction(String x, String y, String z)
 {
-    if (DEBUG == true)
-    {
-        Serial.print("x: ");
-        Serial.println(x);
-        Serial.print("y: ");
-        Serial.println(y);
-    }
 
     connectToWiFi();
     connectToHass();
 
-    if (x == 0.00 && y == 0.00) {
-        publishAlarmToHass("Upside down");
-    } else if (x == -0.01 && y == -0.01) {
+    if (x == "-0.01" && y == "-0.01" && z == "-0.01") {
+        publishAlarmToHass("Face 1");
+    } else if (x == "-0.01" && y == "-0.01" && z == "-0.02") {
         publishAlarmToHass("Face 2");
+    } else if (x == "-0.01" && y == "-0.02" && z == "-0.02") {
+        publishAlarmToHass("Face 3");
+    } else {
+        publishAlarmToHass("Face 4");
     }
 }
 
