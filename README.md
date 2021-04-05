@@ -1,4 +1,4 @@
-# Smart Desktop Cube DIY with ESP32
+# DIY version of the Aqara cube - DIY with ESP32 and Home-Assistant
 
 This DIY smart cube sits on your desk and provides ability to automate everything around you via quick shortcuts.
 
@@ -65,61 +65,6 @@ Wire the **MPU6050** and the **SW-420** to the [**ESP32**](https://amzn.to/3jmCp
 
 <img align="center" src="https://github.com/MecaHumArduino/esp32-smart-cube/blob/main/doc/img/wiring-diagram.png?raw=true" style="max-width:100%;" height="600">
 
-THE CODE
---------
-
-Rename the file [secret.h.public](https://github.com/MecaHumArduino/esp32-smart-cube/blob/main/src/secrets_copy.h) to **secret.h** and edit it with your information: WiFi credentials, Home Assistant details...
-
-The code within `main.cpp` file is well documented, but I'll try to explain the concepts and ideas behind the code in this section.
-
-The sketch begins with the creation of a few objects we'll need along the way: `WiFiClient` that we use to connect to Wifi and `PubSubClient` that we use to send data through MQTT
-
-```cpp
-WiFiClient espClient;
-PubSubClient client(espClient);
-```
-
-Then we declare a few variables like the pins used to send the wave and measure the time it take to bounce back, as long as the number of tries we aim to do while connecting to WiFi because we want to avoid draining the battery trying to connect to WiFi indefinitely.
-
-```cpp
-#define DEBUG true
-#define NB_TRYWIFI 20
-#define durationSleep 30
-
-float GyroX, GyroY, GyroZ;
-Adafruit_MPU6050 mpu;
-```
-
-The `setup()` function make sure the WiFi is disconnected when the board first boots up, and that's because WiFi consumes a lot of energy, so we want to make sure it's only activated when required:
-
-```cpp
-void setup()
-{
-    Serial.begin(9600);
-
-    disconnectWiFi(); // no need to switch WiFi on unless we need it
-
-    pinMode(sensorTrigPin, OUTPUT);
-    pinMode(sensorEchoPin, INPUT);
-}
-```
-
-The function that reads the distance is straightforward:
-
-```cpp
-long readSensor()
-{
-    digitalWrite(sensorTrigPin, LOW);
-    delayMicroseconds(2);
-    digitalWrite(sensorTrigPin, HIGH);
-    delayMicroseconds(10);
-    digitalWrite(sensorTrigPin, LOW);
-
-    duration = pulseIn(sensorEchoPin, HIGH);
-
-    return duration / 58.2; // The echo time is converted into cm
-}
-```
 
 Make sure you have installed an MQTT broker in your HomeAssistant setup beforehand. You can start here: https://www.home-assistant.io/docs/mqtt/broker#run-your-own
 
