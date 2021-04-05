@@ -27,7 +27,7 @@ void connectToWiFi();
 void connectToHass();
 void initGyroComponent();
 void printWakeupReason();
-void publishAlarmToHass(String msg);
+void sendActionToHass(String msg);
 // **************
 
 /**
@@ -110,7 +110,7 @@ void connectToHass()
  * Publishes notification to MQTT topic
  * @return
  */
-void publishAlarmToHass(String msg)
+void sendActionToHass(String msg)
 {
     if (DEBUG == true)
     {
@@ -184,13 +184,15 @@ void doAction(String x, String y, String z)
     connectToHass();
 
     if (x == "-0.01" && y == "-0.01" && z == "-0.01") {
-        publishAlarmToHass("Face 1");
+        sendActionToHass("action:open_front_door");
     } else if (x == "-0.01" && y == "-0.01" && z == "-0.02") {
-        publishAlarmToHass("Face 2");
+        sendActionToHass("action:close_front_door");
     } else if (x == "-0.01" && y == "-0.02" && z == "-0.02") {
-        publishAlarmToHass("Face 3");
+        sendActionToHass("action:enable_busy_mode");
+    } else if (x == "-0.01" && y == "-0.02" && z == "-0.01") {
+        sendActionToHass("action:disable_busy_mode");
     } else {
-        publishAlarmToHass("Face 4");
+        sendActionToHass("action:catch_all");
     }
 }
 
